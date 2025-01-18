@@ -1,24 +1,35 @@
 import pytest
+import os
 from app import app, db
 from models import Actor, Movie
+from dotenv import load_dotenv
 
+load_dotenv()
+
+# Fixture to initialize the app and database
 @pytest.fixture
 def client():
-    """Fixture to set up Flask test client and initialize the database."""
-    app.config['TESTING'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    
-    with app.app_context():
-        db.create_all()
+    database_url = os.getenv('LOCAL_DATABASE_URL')
+    print(f"Using database URL: {database_url}")
 
+    # Ensure app is created properly with context
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    # Set up the database before each test
+    with app.app_context():
+        db.create_all()  # Create tables
+
+    # Use test client to make requests
     with app.test_client() as client:
         yield client
 
+    # Tear down the database after each test
     with app.app_context():
-        db.drop_all()
+        db.session.remove()
+        db.drop_all()  # Drop tables after test
 
-# Test GET /actors route
+
 def test_get_actors(client):
     """Test the GET /actors route."""
     actor = Actor(name="Otm Shank", age=30)
@@ -29,7 +40,8 @@ def test_get_actors(client):
 
     assert response.status_code == 200
 
-    assert b"Test Actor" in response.data
+    actors = json.loads(response.data)
+    assert any(actor['name'] == "Otm Shank" for actor in actors)
     
 # Test GET /actors when no actors exist
 def test_get_actors_empty(client):
@@ -56,7 +68,7 @@ def test_add_actor(client):
 
 # Test POST /add_actor with missing fields
 def test_add_actor_missing_fields(client):
-    response = client.post('/add_actor', json={"name": "John"})
+    response = client.post('/add_actor', json={"name": "Otm"})
     assert response.status_code == 400
     assert b"Name and Age are required." in response.data
 

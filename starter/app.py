@@ -14,9 +14,14 @@ from dotenv import load_dotenv
 app = Flask(__name__)
 CORS(app)
 load_dotenv()
+db.init_app(app)
 migrate = Migrate(app, db)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+env = os.getenv('FLASK_ENV')
+if env == 'production':
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('RENDER_DATABASE_URL')
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('LOCAL_DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 #Get all movies - GET method

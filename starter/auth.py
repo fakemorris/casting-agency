@@ -10,6 +10,7 @@ AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
 API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
 ALGORITHMS = ["RS256"]
 API_AUDIENCE = os.getenv('AUTH0_API_AUDIENCE')
+JWKS_URL = f'https://{AUTH0_DOMAIN}/.well-known/jwks.json'
 
 class AuthError(Exception):
     def __init__(self, error, status_code):
