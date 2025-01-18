@@ -4,7 +4,6 @@ from functools import wraps
 from jose import jwt
 from urllib.request import urlopen
 from flask import request, _request_ctx_stack, jsonify
-from app import APIError 
 
 # Environment variables for Auth0 configuration
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')

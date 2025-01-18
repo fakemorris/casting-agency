@@ -8,7 +8,7 @@ from models import db, Actor, Movie
 from urllib.request import urlopen
 from flask_cors import CORS
 from flask_migrate import Migrate
-from auth import requires_auth
+from auth import requires_auth, AuthError
 from dotenv import load_dotenv
 
 app = Flask(__name__)
@@ -16,13 +16,12 @@ CORS(app)
 load_dotenv()
 migrate = Migrate(app, db)
 
-app.config.from_envvar('FLASK_APP', silent=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 #Get all movies - GET method
 @app.route("/movies", methods=["GET"])
-@requires_auth
+@requires_auth('read:movies')
 def get_movies():
     """
     Retrieves a list of all movies from the database.
@@ -38,7 +37,7 @@ def get_movies():
 
 # Get a specific movie by ID - GET method
 @app.route("/movies/<int:movie_id>", methods=["GET"])
-@requires_auth
+@requires_auth('read:movies')
 def get_movie(movie_id):
     """
     Retrieves a specific movie by its ID.
@@ -54,7 +53,7 @@ def get_movie(movie_id):
 
 # Add a new movie - POST method
 @app.route("/movies", methods=["POST"])
-@requires_auth
+@requires_auth('add:movies')
 def add_movie():
     """
     Adds a new movie to the database.
@@ -77,7 +76,7 @@ def add_movie():
 
 # Update an existing movie - PATCH method
 @app.route("/movies/<int:movie_id>", methods=["PATCH"])
-@requires_auth
+@requires_auth('patch:movies')
 def update_movie(movie_id):
     """
     Updates an existing movie's details.
@@ -104,7 +103,7 @@ def update_movie(movie_id):
 
 # Delete a movie - DELETE method
 @app.route("/movies/<int:movie_id>", methods=["DELETE"])
-@requires_auth
+@requires_auth('delete:movies')
 def delete_movie(movie_id):
     """
     Deletes a movie by its ID from the database.
@@ -126,7 +125,7 @@ def delete_movie(movie_id):
 
 # Get all actors - GET method
 @app.route("/actors", methods=["GET"])
-@requires_auth
+@requires_auth('read:actors')
 def get_actors():
     """
     Retrieves a list of all actors from the database.
@@ -142,7 +141,7 @@ def get_actors():
 
 # Get a specific actor by ID - GET method
 @app.route("/actors/<int:actor_id>", methods=["GET"])
-@requires_auth
+@requires_auth('read:actors')
 def get_actor(actor_id):
     """
     Retrieves a specific actor by their ID.
@@ -158,7 +157,7 @@ def get_actor(actor_id):
 
 # Add a new actor - POST method
 @app.route("/actors", methods=["POST"])
-@requires_auth
+@requires_auth('add:actors')
 def add_actor():
     """
     Adds a new actor to the database.
@@ -181,7 +180,7 @@ def add_actor():
 
 # Update an actor - PATCH method
 @app.route("/actors/<int:actor_id>", methods=["PATCH"])
-@requires_auth
+@requires_auth('patch:actors')
 def update_actor(actor_id):
     """
     Updates an existing actor's details.
@@ -206,6 +205,29 @@ def update_actor(actor_id):
 
     return jsonify(actor.to_dict())
 
+# Delete an actor - DELETE method
+@app.route("/actors/<int:movie_id>", methods=["DELETE"])
+@requires_auth('delete:actors')
+def delete_actor(actor_id):
+    """
+    Deletes an actor by its ID from the database.
+    """
+    actor = Actor.query.get(actor_id)
+    if not actor:
+        return jsonify({
+            "success": False,
+            "message": "Actor not found."
+        }), 404
+
+    db.session.delete(actor)
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "message": f"Movie with ID {actor_id} has been deleted."
+    })
+
+
 @app.errorhandler(AuthError)
 def auth_error(error):
     return jsonify({
@@ -213,14 +235,6 @@ def auth_error(error):
         "error": error.status_code,
         "message": error.error['description']
     }), error.status_code
-
-@app.errorhandler(422)
-def unprocessable(error):
-    return jsonify({
-        "success": False,
-        "error": 422,
-        "message": "unprocessable"
-    }), 422
 
 @app.errorhandler(404)
 def resource_not_found(error):
