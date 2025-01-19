@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
+import json
+from app import db
 
 # Actor model
 class Actor(db.Model):
