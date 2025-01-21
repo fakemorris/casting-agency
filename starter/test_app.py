@@ -4,10 +4,10 @@ import json
 from app import create_app, db
 from models import Actor, Movie
 from dotenv import load_dotenv
+from datetime import date
 
 load_dotenv()
 
-# Set environment variables
 assistant_token = os.environ.get('ASSISTANT_TOKEN')
 director_token = os.environ.get('DIRECTOR_TOKEN')
 producer_token = os.environ.get('PRODUCER_TOKEN')
@@ -17,28 +17,23 @@ class MainTestCase(unittest.TestCase):
     def setUpClass(cls):
         """Runs once before all tests."""
         cls.database_url = os.getenv('LOCAL_DATABASE_URL')
-        print(f"Using database URL: {cls.database_url}")
         
         cls.app = create_app()
         cls.app.config['SQLALCHEMY_DATABASE_URI'] = cls.database_url
         cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
         cls.app.testing = True
         
-        # Set up the Flask app context
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
 
     def setUp(self):
         """Runs before every test."""
-        # Create all tables before each test
         db.create_all()
 
-        # Set up the test client
         self.client = self.app.test_client()
 
     def tearDown(self):
         """Runs after every test."""
-        # Remove the session and drop all tables after each test
         db.session.remove()
         db.drop_all()
 
@@ -90,10 +85,12 @@ class MainTestCase(unittest.TestCase):
     def test_get_actor_unauthorized(self):
         """Test unauthorized access to the endpoint."""
         response = self.client.get('/actors/1', headers={'Authorization': 'Bearer invalid_token'})
+        print(response.data)
         self.assertEqual(response.status_code, 401)
         data = response.get_json()
         self.assertIn('error', data)
-        self.assertEqual(data['error'], 'Unauthorized')
+        self.assertEqual(data['error'], 401)
+        self.assertEqual(data['message'], "Invalid JWT token: Error decoding token headers.")
 
     def test_add_actor(self):
         """Test the POST /actors route."""
@@ -152,7 +149,7 @@ class MainTestCase(unittest.TestCase):
         """Test POST /movies with missing fields."""
         new_movie = {
             "title": "Dial M for Murderousness",
-            "release_year": 2021
+            "release_date": date(2021, 1, 1)
         }
 
         response = self.client.post('/movies', json=new_movie, headers={'Authorization': f'Bearer {director_token}'})
@@ -164,7 +161,7 @@ class MainTestCase(unittest.TestCase):
         """Test POST /movies with non-existing actor_id."""
         new_movie = {
             "title": "Dial M for Murderousness",
-            "release_year": 2021,
+            "release_date": date(2021, 1, 1),
             "genre": "Drama",
             "actor_id": 9999  # Non-existing actor_id
         }
@@ -178,7 +175,7 @@ class MainTestCase(unittest.TestCase):
         """Test PATCH /movies/<id> with non-existing movie."""
         updated_data = {
             "title": "Dial M for Murderousness",
-            "release_year": 2022,
+            "release_date": date(2022, 1, 1),
             "genre": "Comedy"
         }
 
@@ -202,7 +199,7 @@ class MainTestCase(unittest.TestCase):
 
         new_movie = {
             "title": "Inception",
-            "release_year": 2010,
+            "release_date": date(2011, 7, 16),
             "genre": "Sci-Fi",
             "actor_id": actor.id  # Use the actor created above
         }
@@ -213,7 +210,7 @@ class MainTestCase(unittest.TestCase):
         data = response.get_json()
         
         self.assertEqual(data['title'], "Inception")
-        self.assertEqual(data['release_year'], 2010)
+        self.assertEqual(data['release_date'], "2011-07-16")
         self.assertEqual(data['genre'], "Sci-Fi")
         self.assertEqual(data['actor_id'], actor.id)
 
@@ -223,13 +220,13 @@ class MainTestCase(unittest.TestCase):
         db.session.add(actor)
         db.session.commit()
 
-        movie = Movie(title="Dial M for Murderousness", release_year=2021, genre="Thriller", actor_id=actor.id)
+        movie = Movie(title="Dial M for Murderousness", release_date=date(2021, 1, 1), genre="Thriller", actor_id=actor.id)
         db.session.add(movie)
         db.session.commit()
 
         updated_data = {
             "title": "Dial M for Murderousness (Updated)",
-            "release_year": 2012,
+            "release_date": date(2011, 7, 16),
             "genre": "Mystery/Thriller",
         }
 
@@ -239,7 +236,7 @@ class MainTestCase(unittest.TestCase):
         data = response.get_json()
 
         self.assertEqual(data['title'], "Dial M for Murderousness (Updated)")
-        self.assertEqual(data['release_year'], 2012)
+        self.assertEqual(data['release_date'], date(2011, 7, 16))
         self.assertEqual(data['genre'], "Mystery/Thriller")
 
     def test_delete_movie(self):
@@ -248,7 +245,7 @@ class MainTestCase(unittest.TestCase):
         db.session.add(actor)
         db.session.commit()
 
-        movie = Movie(title="Dial M for Murderousness", release_year=2021, genre="Thriller", actor_id=actor.id)
+        movie = Movie(title="Dial M for Murderousness", release_date=date(2021, 1, 1), genre="Thriller", actor_id=actor.id)
         db.session.add(movie)
         db.session.commit()
 
@@ -259,6 +256,28 @@ class MainTestCase(unittest.TestCase):
 
         self.assertTrue(data['success'])
         self.assertIn(f"Movie with ID {movie.id} has been deleted", data['message'])
+        
+    def test_add_movie_insufficient_permissions(self):
+        """Test if the endpoint returns 403 when the user has insufficient permissions."""
+        
+        # Data to add a new movie
+        new_movie_data = {
+            "title": "Dial M for Murderousness",
+            "release_date": date(2022, 1, 1),
+            "genre": "Thriller"
+        }
+
+        response = self.client.post('/movies', 
+                                json=new_movie_data, 
+                                headers={'Authorization': f'Bearer {assistant_token}'})
+        
+        self.assertEqual(response.status_code, 403)
+
+        data = response.get_json()
+
+        self.assertIn('error', data)
+        self.assertEqual(data['error'], 403)
+        self.assertEqual(data['message'], 'Permission not granted')
 
 if __name__ == '__main__':
     unittest.main()

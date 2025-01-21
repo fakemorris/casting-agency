@@ -9,11 +9,10 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from auth import requires_auth, AuthError
 from dotenv import load_dotenv
+from models import db, Movie, Actor
 
 load_dotenv()
 
-# Initialize the database and migrations
-db = SQLAlchemy()
 migrate = Migrate()
 
 def create_app():
@@ -36,9 +35,8 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
 
-    # Register routes (views)
     @app.route("/movies", methods=["GET"])
-    @requires_auth('read:movies')
+    #@requires_auth('read:movies')
     def get_movies():
         """Retrieves a list of all movies from the database."""
         movies = Movie.query.all()
@@ -230,7 +228,7 @@ def create_app():
         return jsonify({
             "success": False,
             "error": 404,
-            "message": "resource not found"
+            "message": "Resource not found"
         }), 404
 
     @app.errorhandler(422)
@@ -238,7 +236,7 @@ def create_app():
         return jsonify({
             "success": False,
             "error": 422,
-            "message": "unprocessable"
+            "message": "Unprocessable"
         }), 422
 
     @app.errorhandler(403)
@@ -247,7 +245,7 @@ def create_app():
         return jsonify({
             "success": False,
             "error": 403,
-            "message": "permission not found"
+            "message": "Permission not found"
         }), 403
 
     @app.errorhandler(Exception)
@@ -265,6 +263,7 @@ def create_app():
             'error': 400,
             'message': 'Bad request, check the request format and data.'
         }), 400
+        
 
     return app
 

@@ -1,6 +1,10 @@
 from flask_sqlalchemy import SQLAlchemy
 import json
-from app import db
+from flask_migrate import Migrate
+
+# Initialize the database and migrations
+db = SQLAlchemy()
+migrate = Migrate()
 
 # Actor model
 class Actor(db.Model):
