@@ -17,7 +17,7 @@ migrate = Migrate()
 
 def create_app():
     """Factory function to create and configure the Flask app."""
-    
+    print("Creating the app...")
     # Initialize the Flask app
     app = Flask(__name__)
     CORS(app)  # Enable Cross-Origin Resource Sharing
@@ -267,8 +267,7 @@ def create_app():
 
     return app
 
+app = create_app()
 
 if __name__ == "__main__":
-    # Create the app using the factory method
-    app = create_app()
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=True)

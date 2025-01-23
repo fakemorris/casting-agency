@@ -4,7 +4,6 @@ from flask_migrate import Migrate
 
 # Initialize the database and migrations
 db = SQLAlchemy()
-migrate = Migrate()
 
 # Actor model
 class Actor(db.Model):
