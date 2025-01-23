@@ -35,6 +35,10 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
 
+    @app.route('/')
+    def home():
+        return 'Welcome to the Casting Agency!'
+
     @app.route("/movies", methods=["GET"])
     #@requires_auth('read:movies')
     def get_movies():
