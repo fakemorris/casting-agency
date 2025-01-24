@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+from sqlalchemy import create_engine
 import os
 from flask import Flask, request, jsonify, _request_ctx_stack
 from functools import wraps
@@ -30,6 +31,10 @@ def create_app():
     else:
         app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('LOCAL_DATABASE_URL')
 
+    print(f"Database URL: {app.config['SQLALCHEMY_DATABASE_URI']}")
+    database_url = app.config['SQLALCHEMY_DATABASE_URI']
+    engine = create_engine(database_url)
+    
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Initialize SQLAlchemy and Migrate with the app
@@ -41,7 +46,7 @@ def create_app():
         return 'Welcome to the Casting Agency!'
 
     @app.route("/movies", methods=["GET"])
-    #@requires_auth('read:movies')
+    @requires_auth('read:movies')
     def get_movies():
         """Retrieves a list of all movies from the database."""
         movies = Movie.query.all()
@@ -54,7 +59,7 @@ def create_app():
         return jsonify([movie.to_dict() for movie in movies])
 
     @app.route("/movies/<int:movie_id>", methods=["GET"])
-    #@requires_auth('read:movies')
+    @requires_auth('read:movies')
     def get_movie(movie_id):
         """Retrieves a specific movie by its ID."""
         movie = Movie.query.get(movie_id)
@@ -67,7 +72,7 @@ def create_app():
         return jsonify(movie.to_dict())
 
     @app.route("/movies", methods=["POST"])
-    #@requires_auth('add:movies')  # Uncomment if you're implementing authentication
+    @requires_auth('add:movies')  # Uncomment if you're implementing authentication
     def add_movie():
         """Adds a new movie to the database."""
         data = request.json
@@ -124,7 +129,7 @@ def create_app():
             }), 500
 
     @app.route("/movies/<int:movie_id>", methods=["PATCH"])
-    # @requires_auth('patch:movies')  # Uncomment if using authentication
+    @requires_auth('patch:movies')  # Uncomment if using authentication
     def update_movie(movie_id):
         """Updates an existing movie's details."""
         movie = Movie.query.get(movie_id)
@@ -175,7 +180,7 @@ def create_app():
         return jsonify(movie.to_dict())
 
     @app.route("/movies/<int:movie_id>", methods=["DELETE"])
-    #@requires_auth('delete:movies')
+    @requires_auth('delete:movies')
     def delete_movie(movie_id):
         """Deletes a movie by its ID from the database."""
         movie = Movie.query.get(movie_id)
@@ -194,7 +199,7 @@ def create_app():
         })
 
     @app.route("/actors", methods=["GET"])
-    #@requires_auth('read:actors')
+    @requires_auth('read:actors')
     def get_actors():
         """Retrieves a list of all actors from the database."""
         actors = Actor.query.all()
@@ -207,7 +212,7 @@ def create_app():
         return jsonify([actor.to_dict() for actor in actors])
 
     @app.route("/actors/<int:actor_id>", methods=["GET"])
-    #@requires_auth('read:actors')
+    @requires_auth('read:actors')
     def get_actor(actor_id):
         """Retrieves a specific actor by their ID."""
         actor = Actor.query.get(actor_id)
@@ -220,7 +225,7 @@ def create_app():
         return jsonify(actor.to_dict())
 
     @app.route("/actors", methods=["POST"])
-    #@requires_auth('add:actors')
+    @requires_auth('add:actors')
     def add_actor():
         """Adds a new actor to the database."""
         data = request.json
@@ -240,7 +245,7 @@ def create_app():
         return jsonify(new_actor.to_dict()), 201
 
     @app.route("/actors/<int:actor_id>", methods=["PATCH"])
-    #@requires_auth('patch:actors')
+    @requires_auth('patch:actors')
     def update_actor(actor_id):
         """Updates an existing actor's details."""
         actor = Actor.query.get(actor_id)
@@ -264,7 +269,7 @@ def create_app():
         return jsonify(actor.to_dict())
 
     @app.route("/actors/<int:actor_id>", methods=["DELETE"])
-    #@requires_auth('delete:actors')
+    @requires_auth('delete:actors')
     def delete_actor(actor_id):
         """Deletes an actor by its ID from the database."""
         actor = Actor.query.get(actor_id)
@@ -332,8 +337,16 @@ def create_app():
             'error': 400,
             'message': 'Bad request, check the request format and data.'
         }), 400
-        
-
+    
+    @app.route('/tabs/user-page')
+    def user_page():
+        access_token = request.args.get('access_token')
+    
+        if access_token:
+            return 'Login was successful!'
+        else:
+            return 'Login failed. No access token found.'
+    
     return app
 
 app = create_app()

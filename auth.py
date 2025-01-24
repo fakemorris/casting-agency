@@ -129,9 +129,24 @@ def requires_auth(permission=''):
     def requires_auth_decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            token = get_token_auth_header()
-            payload = verify_decode_jwt(token)
-            check_permissions(permission, payload)
+            try:
+                # Get the token from the request headers
+                token = get_token_auth_header()
+                
+                # Decode and verify the JWT token
+                payload = verify_decode_jwt(token)
+                
+                # Check if the payload has the required permissions
+                check_permissions(permission, payload)
+                
+            except Exception as e:
+                # Return error if any exception occurs (e.g., missing/invalid token or permission errors)
+                return jsonify({
+                    'message': str(e),
+                    'success': False
+                }), 401
+            
+            # Proceed to the original function, passing the decoded payload as an argument
             return f(payload=payload, *args, **kwargs)
 
         return wrapper

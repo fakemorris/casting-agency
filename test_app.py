@@ -8,7 +8,7 @@ from datetime import date
 
 load_dotenv()
 
-assistant_token = os.environ.get('ASSISTANT_TOKEN')
+assistant_token = os.environ.get('ASSISTANT_TOKEN')        
 director_token = os.environ.get('DIRECTOR_TOKEN')
 producer_token = os.environ.get('PRODUCER_TOKEN')
 
@@ -48,7 +48,7 @@ class MainTestCase(unittest.TestCase):
         db.session.add(actor)
         db.session.commit()
 
-        response = self.client.get('/actors')
+        response = self.client.get('/actors', headers={'Authorization': f'Bearer {assistant_token}'})
 
         self.assertEqual(response.status_code, 200)
 
@@ -60,7 +60,7 @@ class MainTestCase(unittest.TestCase):
         Actor.query.delete()
         db.session.commit()
 
-        response = self.client.get('/actors')
+        response = self.client.get('/actors', headers={'Authorization': f'Bearer {assistant_token}'})
 
         self.assertEqual(response.status_code, 404)
 
@@ -83,7 +83,7 @@ class MainTestCase(unittest.TestCase):
 
     def test_get_actor_not_found(self):
         """Test getting an actor that does not exist."""
-        response = self.client.get('/actors/999')
+        response = self.client.get('/actors/999', headers={'Authorization': f'Bearer {assistant_token}'})
         self.assertEqual(response.status_code, 404)
         data = response.get_json()
         self.assertFalse(data['success'])
