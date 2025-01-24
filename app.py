@@ -25,7 +25,7 @@ def create_app():
     CORS(app)  # Enable Cross-Origin Resource Sharing
 
     # Load environment variables
-    env = os.getenv('FLASK_ENV', 'development')
+    env = os.getenv('FLASK_ENV')
     if env == 'production':
         app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('RENDER_DATABASE_URL')
     else:
