@@ -16,7 +16,7 @@ class MainTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Runs once before all tests."""
-        cls.database_url = os.getenv('LOCAL_DATABASE_URL')
+        cls.database_url = 'postgresql://casting_agency_w2mb_user:HOYwJAuTXdtFGx8NnhoRhbVJcRmOsTL8@dpg-cu41ugtds78s73cgnlh0-a/casting_agency_w2mb'
         
         cls.app = create_app()
         cls.app.config['SQLALCHEMY_DATABASE_URI'] = cls.database_url

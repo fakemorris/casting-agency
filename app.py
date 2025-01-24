@@ -22,14 +22,10 @@ def create_app():
     print("Creating the app...")
     # Initialize the Flask app
     app = Flask(__name__)
-    CORS(app)  # Enable Cross-Origin Resource Sharing
+    CORS(app)
 
     # Load environment variables
-    env = os.getenv('FLASK_ENV')
-    if env == 'production':
-        app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('RENDER_DATABASE_URL')
-    else:
-        app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('LOCAL_DATABASE_URL')
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://casting_agency_w2mb_user:HOYwJAuTXdtFGx8NnhoRhbVJcRmOsTL8@dpg-cu41ugtds78s73cgnlh0-a/casting_agency_w2mb'
 
     print(f"Database URL: {app.config['SQLALCHEMY_DATABASE_URI']}")
     
