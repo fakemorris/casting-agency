@@ -1,1 +1,26 @@
-gunicorn your_application.app:app
+version: 1
+services:
+  - type: web
+    name: casting-agency
+    env: python
+    buildCommand: bash setup.sh # Runs your setup script
+    startCommand: gunicorn app:app # Make sure this is the correct start command for your app
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: AUTH0_DOMAIN
+        value: your-auth0-domain
+      - key: AUTH0_API_AUDIENCE
+        value: casting-agency
+      - key: ALGORITHMS
+        value: RS256
+      - key: LOCAL_DATABASE_URL
+        value: $LOCAL_DATABASE_URL
+      - key: RENDER_DATABASE_URL
+        value: $RENDER_DATABASE_URL
+      - key: ASSISTANT_TOKEN
+        value: $ASSISTANT_TOKEN
+      - key: DIRECTOR_TOKEN
+        value: $DIRECTOR_TOKEN
+      - key: PRODUCER_TOKEN
+        value: $PRODUCER_TOKEN
