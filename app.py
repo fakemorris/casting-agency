@@ -32,8 +32,6 @@ def create_app():
         app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('LOCAL_DATABASE_URL')
 
     print(f"Database URL: {app.config['SQLALCHEMY_DATABASE_URI']}")
-    database_url = app.config['SQLALCHEMY_DATABASE_URI']
-    engine = create_engine(database_url)
     
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
