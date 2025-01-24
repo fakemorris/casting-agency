@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import os
 from flask import Flask, request, jsonify, _request_ctx_stack
@@ -53,7 +54,7 @@ def create_app():
         return jsonify([movie.to_dict() for movie in movies])
 
     @app.route("/movies/<int:movie_id>", methods=["GET"])
-    @requires_auth('read:movies')
+    #@requires_auth('read:movies')
     def get_movie(movie_id):
         """Retrieves a specific movie by its ID."""
         movie = Movie.query.get(movie_id)
@@ -66,27 +67,64 @@ def create_app():
         return jsonify(movie.to_dict())
 
     @app.route("/movies", methods=["POST"])
-    @requires_auth('add:movies')
+    #@requires_auth('add:movies')  # Uncomment if you're implementing authentication
     def add_movie():
         """Adds a new movie to the database."""
         data = request.json
+    
         movie_title = data.get("title")
-        movie_release_year = data.get("release_year")
+        release_date_str = data.get("release_date")
+        genre = data.get("genre")
+        actor_id = data.get("actor_id")
 
-        if not movie_title or not movie_release_year:
+        if not movie_title or not release_date_str or not genre or not actor_id:
             return jsonify({
                 "success": False,
-                "message": "Title and Release Year are required."
+                "message": "Title, Release Date, Genre, and Actor ID are required."
             }), 400
 
-        new_movie = Movie(title=movie_title, release_year=movie_release_year)
-        db.session.add(new_movie)
-        db.session.commit()
+        # Check if the actor exists
+        actor = Actor.query.get(actor_id)
+        if not actor:
+            return jsonify({
+                "success": False,
+                "message": "Actor not found."
+            }), 404
 
-        return jsonify(new_movie.to_dict()), 201
+        # Try parsing the date and handle potential errors
+        try:
+            release_date = datetime.strptime(release_date_str, "%Y-%m-%d").date()
+        except ValueError:
+            return jsonify({
+                "success": False,
+                "message": "Invalid date format. Please use YYYY-MM-DD."
+            }), 400
+
+        try:
+            # Create the new movie and add it to the database
+            new_movie = Movie(
+                title=movie_title,
+                release_date=release_date,
+                genre=genre,
+                actor_id=actor_id
+            )
+
+            db.session.add(new_movie)
+            db.session.commit()
+
+            # Return the newly created movie as a JSON response
+            return jsonify(new_movie.to_dict()), 201
+
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"Error adding movie: {str(e)}")  # Log the error for debugging
+            return jsonify({
+                "success": False,
+                "message": f"An error occurred: {str(e)}"
+            }), 500
 
     @app.route("/movies/<int:movie_id>", methods=["PATCH"])
-    @requires_auth('patch:movies')
+    # @requires_auth('patch:movies')  # Uncomment if using authentication
     def update_movie(movie_id):
         """Updates an existing movie's details."""
         movie = Movie.query.get(movie_id)
@@ -94,23 +132,50 @@ def create_app():
             return jsonify({
                 "success": False,
                 "message": "Movie not found."
-            }), 404
+        }), 404
 
         data = request.json
         movie_title = data.get("title")
-        movie_release_year = data.get("release_year")
+        release_date_str = data.get("release_date")
+        genre = data.get("genre")
+        actor_id = data.get("actor_id")
+
+        if release_date_str:
+            try:
+                release_date = datetime.strptime(release_date_str, "%Y-%m-%d").date()
+                movie.release_date = release_date
+            except ValueError:
+                return jsonify({
+                    "success": False,
+                    "message": "Invalid release date format. Expected format: YYYY-MM-DD."
+                }), 400
 
         if movie_title:
+            if not movie_title.strip():
+                return jsonify({
+                    "success": False,
+                    "message": "Title cannot be empty."
+                }), 400
             movie.title = movie_title
-        if movie_release_year:
-            movie.release_year = movie_release_year
+
+        if genre:
+            movie.genre = genre
+
+        if actor_id:
+            actor = Actor.query.get(actor_id)
+            if not actor:
+                return jsonify({
+                    "success": False,
+                    "message": "Actor not found."
+                }), 404
+            movie.actor_id = actor_id
 
         db.session.commit()
 
         return jsonify(movie.to_dict())
 
     @app.route("/movies/<int:movie_id>", methods=["DELETE"])
-    @requires_auth('delete:movies')
+    #@requires_auth('delete:movies')
     def delete_movie(movie_id):
         """Deletes a movie by its ID from the database."""
         movie = Movie.query.get(movie_id)
@@ -129,7 +194,7 @@ def create_app():
         })
 
     @app.route("/actors", methods=["GET"])
-    @requires_auth('read:actors')
+    #@requires_auth('read:actors')
     def get_actors():
         """Retrieves a list of all actors from the database."""
         actors = Actor.query.all()
@@ -142,7 +207,7 @@ def create_app():
         return jsonify([actor.to_dict() for actor in actors])
 
     @app.route("/actors/<int:actor_id>", methods=["GET"])
-    @requires_auth('read:actors')
+    #@requires_auth('read:actors')
     def get_actor(actor_id):
         """Retrieves a specific actor by their ID."""
         actor = Actor.query.get(actor_id)
@@ -155,7 +220,7 @@ def create_app():
         return jsonify(actor.to_dict())
 
     @app.route("/actors", methods=["POST"])
-    @requires_auth('add:actors')
+    #@requires_auth('add:actors')
     def add_actor():
         """Adds a new actor to the database."""
         data = request.json
@@ -175,7 +240,7 @@ def create_app():
         return jsonify(new_actor.to_dict()), 201
 
     @app.route("/actors/<int:actor_id>", methods=["PATCH"])
-    @requires_auth('patch:actors')
+    #@requires_auth('patch:actors')
     def update_actor(actor_id):
         """Updates an existing actor's details."""
         actor = Actor.query.get(actor_id)
@@ -199,7 +264,7 @@ def create_app():
         return jsonify(actor.to_dict())
 
     @app.route("/actors/<int:actor_id>", methods=["DELETE"])
-    @requires_auth('delete:actors')
+    #@requires_auth('delete:actors')
     def delete_actor(actor_id):
         """Deletes an actor by its ID from the database."""
         actor = Actor.query.get(actor_id)
@@ -274,4 +339,4 @@ def create_app():
 app = create_app()
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=8080, debug=True)
+    app.run(host='127.0.0.1', port=5000, debug=True)

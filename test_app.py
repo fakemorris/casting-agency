@@ -57,13 +57,20 @@ class MainTestCase(unittest.TestCase):
     
     def test_get_actors_empty(self):
         """Test GET /actors when no actors exist."""
-        response = self.client.get('/actors')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json, [])
+        Actor.query.delete()
+        db.session.commit()
 
-    def test_get_actor_exists(self):
-        """Test getting an actor that exists in the database."""
-        actor = Actor(name="Test Actor", age=30)
+        response = self.client.get('/actors')
+
+        self.assertEqual(response.status_code, 404)
+
+        data = response.get_json()
+        self.assertEqual(data['message'], "No actors found.")
+        self.assertFalse(data['success'])
+
+    def test_get_actor_exists_by_id(self):
+        """Test getting an actor that exists in the database using id."""
+        actor = Actor(name="Otm Shank", age=30)
         db.session.add(actor)
         db.session.commit()
 
@@ -72,7 +79,7 @@ class MainTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
         self.assertEqual(data['id'], 1)
-        self.assertEqual(data['name'], "Test Actor")
+        self.assertEqual(data['name'], "Otm Shank")
 
     def test_get_actor_not_found(self):
         """Test getting an actor that does not exist."""
@@ -84,8 +91,18 @@ class MainTestCase(unittest.TestCase):
 
     def test_get_actor_unauthorized(self):
         """Test unauthorized access to the endpoint."""
+            # Create an actor in the database
+        actor_data = {
+            "name": "Otm Shank",
+            "age": 30
+        }
+
+        response = self.client.post('/actors', json=actor_data, headers={'Authorization': f'Bearer {director_token}'})
+    
+        self.assertEqual(response.status_code, 201)
+        
         response = self.client.get('/actors/1', headers={'Authorization': 'Bearer invalid_token'})
-        print(response.data)
+        
         self.assertEqual(response.status_code, 401)
         data = response.get_json()
         self.assertIn('error', data)
@@ -109,9 +126,19 @@ class MainTestCase(unittest.TestCase):
 
     def test_add_actor_missing_fields(self):
         """Test POST /actors route with missing fields."""
-        response = self.client.post('/add_actor', json={"name": "Otm"}, headers={'Authorization': f'Bearer {director_token}'})
+
+        new_actor_data = {
+            "name": "Otm Shanks"
+        }
+
+        response = self.client.post('/actors', json=new_actor_data)
+
         self.assertEqual(response.status_code, 400)
-        self.assertIn(b"Name and Age are required.", response.data)
+
+        data = response.get_json()
+        self.assertEqual(data['message'], "Name and Age are required.")
+        self.assertFalse(data['success'])
+
 
     def test_update_actor(self):
         """Test the PATCH /actors/<id> route."""
@@ -155,7 +182,7 @@ class MainTestCase(unittest.TestCase):
         response = self.client.post('/movies', json=new_movie, headers={'Authorization': f'Bearer {director_token}'})
 
         self.assertEqual(response.status_code, 400)
-        self.assertIn(b"Missing required fields", response.data)
+        self.assertIn(b"Title, Release Date, Genre, and Actor ID are required.", response.data)
 
     def test_add_movie_non_existing_actor(self):
         """Test POST /movies with non-existing actor_id."""
@@ -169,7 +196,7 @@ class MainTestCase(unittest.TestCase):
         response = self.client.post('/movies', json=new_movie, headers={'Authorization': f'Bearer {director_token}'})
 
         self.assertEqual(response.status_code, 404)
-        self.assertIn(b"Actor with the provided actor_id does not exist", response.data)
+        self.assertIn(b'Actor not found.', response.data)
 
     def test_update_non_existing_movie(self):
         """Test PATCH /movies/<id> with non-existing movie."""
@@ -198,10 +225,10 @@ class MainTestCase(unittest.TestCase):
         db.session.commit()
 
         new_movie = {
-            "title": "Inception",
-            "release_date": date(2011, 7, 16),
-            "genre": "Sci-Fi",
-            "actor_id": actor.id  # Use the actor created above
+            "title": "Dial M for Murderousness",
+            "release_date": "2021-01-01",
+            "genre": "Thriller",
+            "actor_id": actor.id
         }
 
         response = self.client.post('/movies', json=new_movie, headers={'Authorization': f'Bearer {director_token}'})
@@ -209,9 +236,9 @@ class MainTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 201)
         data = response.get_json()
         
-        self.assertEqual(data['title'], "Inception")
-        self.assertEqual(data['release_date'], "2011-07-16")
-        self.assertEqual(data['genre'], "Sci-Fi")
+        self.assertEqual(data['title'], "Dial M for Murderousness")
+        self.assertEqual(data['release_date'], "2021-01-01")
+        self.assertEqual(data['genre'], "Thriller")
         self.assertEqual(data['actor_id'], actor.id)
 
     def test_update_movie(self):
@@ -226,17 +253,18 @@ class MainTestCase(unittest.TestCase):
 
         updated_data = {
             "title": "Dial M for Murderousness (Updated)",
-            "release_date": date(2011, 7, 16),
+            "release_date": "2011-07-16",
             "genre": "Mystery/Thriller",
         }
 
         response = self.client.patch(f'/movies/{movie.id}', json=updated_data, headers={'Authorization': f'Bearer {director_token}'})
 
         self.assertEqual(response.status_code, 200)
+
         data = response.get_json()
 
         self.assertEqual(data['title'], "Dial M for Murderousness (Updated)")
-        self.assertEqual(data['release_date'], date(2011, 7, 16))
+        self.assertEqual(data['release_date'], "2011-07-16")
         self.assertEqual(data['genre'], "Mystery/Thriller")
 
     def test_delete_movie(self):
@@ -257,27 +285,31 @@ class MainTestCase(unittest.TestCase):
         self.assertTrue(data['success'])
         self.assertIn(f"Movie with ID {movie.id} has been deleted", data['message'])
         
+    
     def test_add_movie_insufficient_permissions(self):
         """Test if the endpoint returns 403 when the user has insufficient permissions."""
-        
-        # Data to add a new movie
+
+        actor = Actor(name="Otm Shanks", age=30)
+        db.session.add(actor)
+        db.session.commit()
+
         new_movie_data = {
             "title": "Dial M for Murderousness",
-            "release_date": date(2022, 1, 1),
-            "genre": "Thriller"
+            "release_date": "2022-01-01",
+            "genre": "Thriller",
+            "actor_id": actor.id  # Valid actor_id
         }
 
         response = self.client.post('/movies', 
-                                json=new_movie_data, 
-                                headers={'Authorization': f'Bearer {assistant_token}'})
-        
+                                    json=new_movie_data, 
+                                    headers={'Authorization': f'Bearer {assistant_token}'} )
+
         self.assertEqual(response.status_code, 403)
 
         data = response.get_json()
 
-        self.assertIn('error', data)
-        self.assertEqual(data['error'], 403)
         self.assertEqual(data['message'], 'Permission not granted')
+        self.assertFalse(data['success'])
 
 if __name__ == '__main__':
     unittest.main()
