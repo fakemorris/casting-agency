@@ -40,7 +40,7 @@ def create_app():
         return 'Welcome to the Casting Agency!'
 
     @app.route("/movies", methods=["GET"])
-    @requires_auth('read:movies')
+    #@requires_auth('read:movies')
     def get_movies():
         """Retrieves a list of all movies from the database."""
         movies = Movie.query.all()

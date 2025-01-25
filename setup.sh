@@ -17,7 +17,15 @@ export FLASK_ENV="production"
 export LOCAL_DATABASE_URL="postgresql://drive:postgres@localhost:5432/casting_agency"
 
 # Database URL for Render
-export RENDER_DATABASE_URL="postgresql://casting_agency_w2mb_user:HOYwJAuTXdtFGx8NnhoRhbVJcRmOsTL8@dpg-cu41ugtds78s73cgnlh0-a/casting_agency_w2mb"
+export RENDER_DATABASE_URL="postgresql://casting_agency_w2mb_user:HOYwJAuTXdtFGx8NnhoRhbVJcRmOsTL8@dpg-cu41ugtds78s73cgnlh0-a.oregon-postgres.render.com/casting_agency_w2mb"
+
+#Database Migration
+if command -v flask &> /dev/null && [ -f "migrations" ]; then
+    echo "Running database migrations..."
+    flask db upgrade
+else
+    echo "Flask or migrations not found. Skipping migrations."
+fi
 
 # JWT tokens for different roles
 export ASSISTANT_TOKEN="your_assistant_jwt_token_here"

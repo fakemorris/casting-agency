@@ -310,6 +310,64 @@ class MainTestCase(unittest.TestCase):
 
         self.assertEqual(data['message'], 'Permission not granted')
         self.assertFalse(data['success'])
+        
+    def test_get_movies(self):
+        """Test getting all movies."""
+        movie1 = Movie(title="Test Movie 1", release_date="2025-01-01", genre="Action")
+        movie2 = Movie(title="Test Movie 2", release_date="2025-02-01", genre="Comedy")
+        db.session.add(movie1)
+        db.session.add(movie2)
+        db.session.commit()
+
+        response = self.client.get("/movies")
+        
+        self.assertEqual(response.status_code, 200)
+        
+        data = response.get_json()
+        
+        self.assertGreater(len(data), 0)
+        movie_titles = [movie["title"] for movie in data]
+        self.assertIn("Test Movie 1", movie_titles)
+        self.assertIn("Test Movie 2", movie_titles)
+    
+    def test_get_movies_no_data(self):
+        """Test getting all movies when there are no movies in the database."""
+        Movie.query.delete()
+        db.session.commit()
+
+        response = self.client.get("/movies")
+        
+        self.assertEqual(response.status_code, 404)
+        
+        data = response.get_json()
+
+        self.assertFalse(data["success"])
+        self.assertEqual(data["message"], "No movies found.")
+
+    def test_get_movie(self):
+        """Test getting a specific movie by its ID."""
+        movie = Movie(title="Test Movie 1", release_date="2025-01-01", genre="Action")
+        db.session.add(movie)
+        db.session.commit()
+
+        response = self.client.get(f"/movies/{movie.id}")
+        
+        self.assertEqual(response.status_code, 200)
+        
+        data = response.get_json()
+
+        self.assertEqual(data["title"], movie.title)
+    
+    def test_get_movie_not_found(self):
+        """Test getting a movie by ID that doesn't exist."""
+        response = self.client.get("/movies/99999")
+        
+        self.assertEqual(response.status_code, 404)
+        
+        data = response.get_json()
+
+        self.assertFalse(data["success"])
+        self.assertEqual(data["message"], "Movie not found.")
 
 if __name__ == '__main__':
     unittest.main()
