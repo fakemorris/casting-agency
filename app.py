@@ -23,9 +23,16 @@ def create_app():
     # Initialize the Flask app
     app = Flask(__name__)
     CORS(app)
-
-    # Load environment variables
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://casting_agency_w2mb_user:HOYwJAuTXdtFGx8NnhoRhbVJcRmOsTL8@dpg-cu41ugtds78s73cgnlh0-a/casting_agency_w2mb'
+    
+    flask_env = os.getenv('FLASK_ENV')  # Default to 'production' if not set
+    
+    # Set the database URI based on the environment
+    if flask_env == 'production':
+        app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('RENDER_DATABASE_URL', 'postgresql://casting_agency_w2mb_user:HOYwJAuTXdtFGx8NnhoRhbVJcRmOsTL8@dpg-cu41ugtds78s73cgnlh0-a.oregon-postgres.render.com/casting_agency_w2mb')
+        print("Using Render database...")
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('LOCAL_DATABASE_URL', 'postgresql://drive:postgres@localhost:5432/casting_agency')
+        print("Using local database...")
 
     print(f"Database URL: {app.config['SQLALCHEMY_DATABASE_URI']}")
     
