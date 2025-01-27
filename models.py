@@ -33,7 +33,7 @@ class Movie(db.Model):
     title = db.Column(db.String(100), nullable=False)
     release_date = db.Column(db.Date, nullable=False)
     genre = db.Column(db.String(50), nullable=False)
-    actor_id = db.Column(db.Integer, db.ForeignKey('actors.id'), nullable=False)
+    actor_id = db.Column(db.Integer, db.ForeignKey('actors.id', ondelete='CASCADE'), nullable=False)
     actor = db.relationship('Actor', back_populates='movies')
 
     def __repr__(self):
