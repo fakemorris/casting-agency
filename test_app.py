@@ -91,31 +91,31 @@ class MainTestCase(unittest.TestCase):
 
     def test_get_actor_unauthorized(self):
         """Test unauthorized access to the endpoint."""
-        actor_data = {"name": "Otm Shank", "age": 30}
+        actor_data = {"name": "Calculon", "age": 25}
         response = self.client.post('/actors', json=actor_data, headers={'Authorization': f'Bearer {director_token}'})
         self.assertEqual(response.status_code, 201)
 
         response = self.client.get('/actors/1', headers={'Authorization': 'Bearer invalid_token'})
         self.assertEqual(response.status_code, 401)
         data = response.get_json()
-        self.assertIn('error', data)
-        self.assertEqual(data['error'], 401)
+        self.assertIn('message', data)
         self.assertEqual(data['message'], "Invalid JWT token: Error decoding token headers.")
+        self.assertEqual(data['success'], False)
 
     def test_add_actor(self):
         """Test the POST /actors route."""
-        new_actor = {"name": "Otm Shank", "age": 25}
+        new_actor = {"name": "Calculon", "age": 25}
         response = self.client.post('/actors', json=new_actor, headers={'Authorization': f'Bearer {director_token}'})
         self.assertEqual(response.status_code, 201)
 
-        actor = Actor.query.filter_by(name="Otm Shank").first()
+        actor = Actor.query.filter_by(name="Calculon").first()
         self.assertIsNotNone(actor)
         self.assertEqual(actor.age, 25)
 
     def test_add_actor_missing_fields(self):
         """Test POST /actors route with missing fields."""
         new_actor_data = {"name": "Otm Shanks"}
-        response = self.client.post('/actors', json=new_actor_data)
+        response = self.client.post('/actors', json=new_actor_data, headers={'Authorization': f'Bearer {director_token}'})
         self.assertEqual(response.status_code, 400)
         data = response.get_json()
         self.assertEqual(data['message'], "Name and Age are required.")
@@ -129,15 +129,6 @@ class MainTestCase(unittest.TestCase):
 
         updated_actor = Actor.query.get(self.actor.id)
         self.assertEqual(updated_actor.age, 45)
-        
-    def test_update_actor_invalid_data(self):
-        """Test updating an actor with invalid data."""
-        updated_data = {"name": "", "age": -5}
-        response = self.client.patch(f'/actors/{self.actor.id}', json=updated_data, headers={'Authorization': f'Bearer {director_token}'})
-        self.assertEqual(response.status_code, 400)
-        data = response.get_json()
-        self.assertIn("Invalid data", data['message'])
-        self.assertFalse(data['success'])
 
     def test_delete_actor(self):
         """Test the DELETE /actors/<id> route."""

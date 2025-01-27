@@ -46,11 +46,10 @@ def check_permissions(permission, payload):
             'code': 'missing_permissions',
             'description': 'Permissions are not included in the token payload'
         }, 400)
-
     if permission not in payload['permissions']:
         raise AuthError({
             'code': 'insufficient_permissions',
-            'description': f'Permission {permission} is not granted to the user'
+            'description': f'Permission not granted'
         }, 403)
 
     return True
@@ -130,23 +129,23 @@ def requires_auth(permission=''):
         @wraps(f)
         def wrapper(*args, **kwargs):
             try:
-                # Get the token from the request headers
                 token = get_token_auth_header()
                 
-                # Decode and verify the JWT token
                 payload = verify_decode_jwt(token)
                 
-                # Check if the payload has the required permissions
                 check_permissions(permission, payload)
-                
-            except Exception as e:
-                # Return error if any exception occurs (e.g., missing/invalid token or permission errors)
-                return jsonify({
-                    'message': str(e),
-                    'success': False
-                }), 401
             
-            # Proceed to the original function, passing the decoded payload as an argument
+            except AuthError as e:
+                if e.status_code == 403:
+                    return jsonify({
+                        'message': e.error['description'],
+                        'success': False
+                    }), 403
+                return jsonify({
+                    'message': e.error['description'],
+                    'success': False
+                }), e.status_code
+
             return f(payload=payload, *args, **kwargs)
 
         return wrapper
