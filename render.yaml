@@ -6,7 +6,7 @@ services:
     buildCommand: |
       bash setup.sh  # Runs your setup script
       flask db upgrade  # Run migrations after setup
-    startCommand: gunicorn app:app # Make sure this is the correct start command for your app
+    startCommand: gunicorn app:app
     envVars:
       - key: FLASK_ENV
         value: production
