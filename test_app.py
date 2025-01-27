@@ -129,6 +129,15 @@ class MainTestCase(unittest.TestCase):
 
         updated_actor = Actor.query.get(self.actor.id)
         self.assertEqual(updated_actor.age, 45)
+        
+    def test_update_actor_invalid_data(self):
+        """Test updating an actor with invalid data."""
+        updated_data = {"name": "", "age": -5}
+        response = self.client.patch(f'/actors/{self.actor.id}', json=updated_data, headers={'Authorization': f'Bearer {director_token}'})
+        self.assertEqual(response.status_code, 400)
+        data = response.get_json()
+        self.assertIn("Invalid data", data['message'])
+        self.assertFalse(data['success'])
 
     def test_delete_actor(self):
         """Test the DELETE /actors/<id> route."""
@@ -141,6 +150,14 @@ class MainTestCase(unittest.TestCase):
 
         deleted_actor = Actor.query.get(actor.id)
         self.assertIsNone(deleted_actor)
+    
+    def test_delete_actor_not_found(self):
+        """Test deleting an actor that doesn't exist."""
+        response = self.client.delete('/actors/999', headers={'Authorization': f'Bearer {producer_token}'})
+        self.assertEqual(response.status_code, 404)
+        data = response.get_json()
+        self.assertEqual(data['message'], "Actor not found.")
+        self.assertFalse(data['success'])
 
     def test_add_movie_missing_fields(self):
         """Test POST /movies with missing fields."""
