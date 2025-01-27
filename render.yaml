@@ -3,7 +3,9 @@ services:
   - type: web
     name: casting-agency
     env: python
-    buildCommand: bash setup.sh # Runs your setup script
+    buildCommand: |
+      bash setup.sh  # Runs your setup script
+      flask db upgrade  # Run migrations after setup
     startCommand: gunicorn app:app # Make sure this is the correct start command for your app
     envVars:
       - key: FLASK_ENV
