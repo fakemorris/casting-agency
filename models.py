@@ -12,6 +12,8 @@ class Actor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     age = db.Column(db.Integer, nullable=False)
+    
+    movies = db.relationship('Movie', backref='actor', cascade='all, delete-orphan')
 
     def __repr__(self):
         return f'<Actor {self.name}>'

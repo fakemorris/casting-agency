@@ -48,7 +48,7 @@ def create_app():
 
     @app.route("/movies", methods=["GET"])
     #@requires_auth('read:movies')
-    def get_movies():
+    def get_movies(payload):
         """Retrieves a list of all movies from the database."""
         movies = Movie.query.all()
         if not movies:
@@ -61,7 +61,7 @@ def create_app():
 
     @app.route("/movies/<int:movie_id>", methods=["GET"])
     @requires_auth('read:movies')
-    def get_movie(movie_id):
+    def get_movie(movie_id, payload):
         """Retrieves a specific movie by its ID."""
         movie = Movie.query.get(movie_id)
         if not movie:
@@ -74,7 +74,7 @@ def create_app():
 
     @app.route("/movies", methods=["POST"])
     @requires_auth('add:movies')  # Uncomment if you're implementing authentication
-    def add_movie():
+    def add_movie(payload):
         """Adds a new movie to the database."""
         data = request.json
     
@@ -131,7 +131,7 @@ def create_app():
 
     @app.route("/movies/<int:movie_id>", methods=["PATCH"])
     @requires_auth('patch:movies')  # Uncomment if using authentication
-    def update_movie(movie_id):
+    def update_movie(movie_id, payload):
         """Updates an existing movie's details."""
         movie = Movie.query.get(movie_id)
         if not movie:
@@ -182,7 +182,7 @@ def create_app():
 
     @app.route("/movies/<int:movie_id>", methods=["DELETE"])
     @requires_auth('delete:movies')
-    def delete_movie(movie_id):
+    def delete_movie(movie_id, payload):
         """Deletes a movie by its ID from the database."""
         movie = Movie.query.get(movie_id)
         if not movie:
@@ -201,7 +201,7 @@ def create_app():
 
     @app.route("/actors", methods=["GET"])
     @requires_auth('read:actors')
-    def get_actors():
+    def get_actors(payload):
         """Retrieves a list of all actors from the database."""
         actors = Actor.query.all()
         if not actors:
@@ -214,7 +214,7 @@ def create_app():
 
     @app.route("/actors/<int:actor_id>", methods=["GET"])
     @requires_auth('read:actors')
-    def get_actor(actor_id):
+    def get_actor(actor_id, payload):
         """Retrieves a specific actor by their ID."""
         actor = Actor.query.get(actor_id)
         if not actor:
@@ -227,7 +227,7 @@ def create_app():
 
     @app.route("/actors", methods=["POST"])
     @requires_auth('add:actors')
-    def add_actor():
+    def add_actor(payload):
         """Adds a new actor to the database."""
         data = request.json
         actor_name = data.get("name")
@@ -247,7 +247,7 @@ def create_app():
 
     @app.route("/actors/<int:actor_id>", methods=["PATCH"])
     @requires_auth('patch:actors')
-    def update_actor(actor_id):
+    def update_actor(actor_id, payload):
         """Updates an existing actor's details."""
         actor = Actor.query.get(actor_id)
         if not actor:
@@ -271,7 +271,7 @@ def create_app():
 
     @app.route("/actors/<int:actor_id>", methods=["DELETE"])
     @requires_auth('delete:actors')
-    def delete_actor(actor_id):
+    def delete_actor(actor_id, payload):
         """Deletes an actor by its ID from the database."""
         actor = Actor.query.get(actor_id)
         if not actor:
