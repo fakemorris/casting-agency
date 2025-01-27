@@ -13,7 +13,7 @@ class Actor(db.Model):
     name = db.Column(db.String(100), nullable=False)
     age = db.Column(db.Integer, nullable=False)
     
-    movies = db.relationship('Movie', backref='actor', cascade='all, delete-orphan')
+    movies = db.relationship('Movie', backref='actor_relationship', cascade='all, delete-orphan')
 
     def __repr__(self):
         return f'<Actor {self.name}>'
@@ -34,7 +34,7 @@ class Movie(db.Model):
     release_date = db.Column(db.Date, nullable=False)
     genre = db.Column(db.String(50), nullable=False)
     actor_id = db.Column(db.Integer, db.ForeignKey('actors.id'), nullable=False)
-    actor = db.relationship('Actor', backref=db.backref('movies', lazy=True))
+    actor = db.relationship('Actor', backref=db.backref('movies_relationship', lazy=True))
 
     def __repr__(self):
         return f'<Movie {self.title}>'
