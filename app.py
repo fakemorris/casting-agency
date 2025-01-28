@@ -76,7 +76,7 @@ def create_app():
     @requires_auth('add:movies')  # Uncomment if you're implementing authentication
     def add_movie(payload):
         """Adds a new movie to the database."""
-        data = request.json
+        data = request.get_json()
     
         movie_title = data.get("title")
         release_date_str = data.get("release_date")
@@ -89,7 +89,6 @@ def create_app():
                 "message": "Title, Release Date, Genre, and Actor ID are required."
             }), 400
 
-        # Check if the actor exists
         actor = Actor.query.get(actor_id)
         if not actor:
             return jsonify({
@@ -97,7 +96,6 @@ def create_app():
                 "message": "Actor not found."
             }), 404
 
-        # Try parsing the date and handle potential errors
         try:
             release_date = datetime.strptime(release_date_str, "%Y-%m-%d").date()
         except ValueError:
@@ -107,7 +105,6 @@ def create_app():
             }), 400
 
         try:
-            # Create the new movie and add it to the database
             new_movie = Movie(
                 title=movie_title,
                 release_date=release_date,
@@ -118,7 +115,6 @@ def create_app():
             db.session.add(new_movie)
             db.session.commit()
 
-            # Return the newly created movie as a JSON response
             return jsonify(new_movie.to_dict()), 201
 
         except Exception as e:
@@ -140,7 +136,7 @@ def create_app():
                 "message": "Movie not found."
         }), 404
 
-        data = request.json
+        data = request.get_json()
         movie_title = data.get("title")
         release_date_str = data.get("release_date")
         genre = data.get("genre")
@@ -229,7 +225,7 @@ def create_app():
     @requires_auth('add:actors')
     def add_actor(payload):
         """Adds a new actor to the database."""
-        data = request.json
+        data = request.get_json()
         actor_name = data.get("name")
         actor_age = data.get("age")
 
@@ -256,7 +252,7 @@ def create_app():
                 "message": "Actor not found."
             }), 404
 
-        data = request.json
+        data = request.get_json()
         actor_name = data.get("name")
         actor_age = data.get("age")
 
