@@ -9,9 +9,9 @@ from flask_sqlalchemy import SQLAlchemy
 from urllib.request import urlopen
 from flask_cors import CORS
 from flask_migrate import Migrate
-from auth import requires_auth, AuthError
+from .auth import requires_auth, AuthError
 from dotenv import load_dotenv
-from models import db, Movie, Actor
+from .models import db, Movie, Actor
 
 load_dotenv()
 
