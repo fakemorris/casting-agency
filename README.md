@@ -29,7 +29,7 @@ $ export FLASK_APP=app.py
 $ export FLASK_ENV=development
 $ flask run
 
-Environment variables are set in the .env file.
+Environment variables are set in the .env file and in the environment settings on Render.
 
 Setting the FLASK_ENV variable to development will detect file changes and restart the server automatically.
 
@@ -48,7 +48,7 @@ POST /actors & /movies
 PATCH /actors/<int:id> & /movies/<int:id>
 
 Auth0 Setup:
-AUTH0_DOMAIN, ALGORITHMS and API_AUDIENCE are all available in the .env file for reference. Json Web Tokens: You can find JWTs for each role in the .env file to run the app locally.
+AUTH0_DOMAIN, ALGORITHMS and API_AUDIENCE are all available in the setup.sh file for reference. Json Web Tokens: You can find JWTs for each role in the below to run the app locally.
 
 Roles: All 3 roles have been defined in Auth0 and following permissions as shown for each role below are also defined in Auth0.
 
@@ -57,8 +57,8 @@ Casting Director - All permissions a Casting Assistant has and is able to add an
 Executive Producer - All permissions a Casting Director has and can delete movies and actors from the database.
 
 Deployment Details:
-App is deployed to Heroku.
-Heroku Postgres DATABASE details are available in setup.sh file for reference.
+App is deployed to Render.
+DATABASE details are available in setup.sh file for reference.
 Use the above stated endpoints and append to this link above to execute the app either thru CURL or Postman. For example:
 
 $ curl -X GET https://casting-agency-dynl.onrender.com/actors?page=1
