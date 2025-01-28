@@ -4,25 +4,9 @@ services:
     name: casting-agency
     env: python
     buildCommand: |
+      echo "Running setup.sh..."
       bash setup.sh  # Runs your setup script
+      echo "Running migrations..."
       flask db upgrade  # Run migrations after setup
+      echo "Migrations completed"
     startCommand: gunicorn app:app
-    envVars:
-      - key: FLASK_ENV
-        value: production
-      - key: AUTH0_DOMAIN
-        value: your-auth0-domain
-      - key: AUTH0_API_AUDIENCE
-        value: casting-agency
-      - key: ALGORITHMS
-        value: RS256
-      - key: LOCAL_DATABASE_URL
-        value: $LOCAL_DATABASE_URL
-      - key: RENDER_DATABASE_URL
-        value: $RENDER_DATABASE_URL
-      - key: ASSISTANT_TOKEN
-        value: $ASSISTANT_TOKEN
-      - key: DIRECTOR_TOKEN
-        value: $DIRECTOR_TOKEN
-      - key: PRODUCER_TOKEN
-        value: $PRODUCER_TOKEN
