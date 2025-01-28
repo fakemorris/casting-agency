@@ -48,7 +48,7 @@ POST /actors & /movies
 PATCH /actors/<int:id> & /movies/<int:id>
 
 Auth0 Setup:
-AUTH0_DOMAIN, ALGORITHMS and API_AUDIENCE are all available in the setup.sh file for reference. Json Web Tokens: You can find JWTs for each role in the below to run the app locally.
+AUTH0_DOMAIN, ALGORITHMS and API_AUDIENCE are all available in the setup.sh file for reference. Json Web Tokens: You can find JWTs for each role in the setup.sh to run the app locally.
 
 Roles: All 3 roles have been defined in Auth0 and following permissions as shown for each role below are also defined in Auth0.
 
