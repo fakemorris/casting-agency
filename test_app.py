@@ -1,8 +1,8 @@
 import unittest
 import os
 import json
-from app import create_app, db
-from models import Actor, Movie
+from .app import create_app, db
+from .models import Actor, Movie
 from dotenv import load_dotenv
 from datetime import date
 

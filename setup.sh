@@ -28,9 +28,4 @@ cd /opt/render/project/src/
 # Now run the migration command
 flask db upgrade
 
-# JWT tokens for different roles
-export ASSISTANT_TOKEN="your_assistant_jwt_token_here"
-export DIRECTOR_TOKEN="your_director_jwt_token_here"
-export PRODUCER_TOKEN="your_producer_jwt_token_here"
-
 echo "Setup completed successfully!"
